@@ -14,7 +14,7 @@ type Lambda = (this: unknown, text?: string) => unknown;
 export interface RenderState {
   readonly partials: Partials | undefined;
   readonly escape: (value: string) => string;
-  /** Lazily created per render call: trees for partials and lambda output. */
+  /** Lazily created per render call: parsed trees of lambda output. */
   cache: Map<string, Tree> | undefined;
 }
 
@@ -109,22 +109,38 @@ function resolvePartial(name: string, partials: Partials | undefined): PartialSo
   return Object.prototype.hasOwnProperty.call(partials, name) ? partials[name] : undefined;
 }
 
+const PARTIAL_CACHE_LIMIT = 512;
+/** source text -> indent -> tree. Content-keyed, so it can never go stale. */
+const partialTrees = new Map<string, Map<string, Tree>>();
+
+function partialTree(text: string, indent: string): Tree {
+  let byIndent = partialTrees.get(text);
+  if (byIndent === undefined) {
+    if (partialTrees.size >= PARTIAL_CACHE_LIMIT) partialTrees.clear();
+    byIndent = new Map();
+    partialTrees.set(text, byIndent);
+  }
+  let tree = byIndent.get(indent);
+  if (tree === undefined) {
+    // A standalone partial re-indents every non-empty line of its *template*
+    // (not its output), so newlines inside interpolated values stay put.
+    tree = parse(indent === "" ? text : text.replace(LINE_START, indent));
+    byIndent.set(indent, tree);
+  }
+  return tree;
+}
+
 function renderPartial(node: PartialToken, ctx: Context, state: RenderState): string {
   const source = resolvePartial(node.name, state.partials);
   if (source === undefined) return "";
 
   const { indent } = node;
-  if (indent === "" && typeof source !== "string") {
-    return renderTree(source.tree, ctx, state);
-  }
-
-  const key = "partial:" + JSON.stringify([indent, node.name]);
-  const tree = cachedTree(state, key, () => {
-    const text = typeof source === "string" ? source : source.source;
-    // A standalone partial re-indents every non-empty line of its *template*
-    // (not its output), so newlines inside interpolated values stay put.
-    return parse(indent === "" ? text : text.replace(LINE_START, indent));
-  });
+  const tree =
+    typeof source === "string"
+      ? partialTree(source, indent)
+      : indent === ""
+        ? source.tree
+        : partialTree(source.source, indent);
   return renderTree(tree, ctx, state);
 }
 
