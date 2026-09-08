@@ -39,7 +39,7 @@ export function compile(template: string, options: CompileOptions = {}): Compile
   if (typeof template !== "string") {
     throw new TypeError(`compile() expects a string template, got ${typeof template}`);
   }
-  const tree = parse(template);
+  const tree = parse(template, options.delimiters);
   const escape = options.escape ?? escapeHtml;
   const render = (view?: unknown, partials?: Partials): string =>
     renderRoot(tree, view, partials, escape);

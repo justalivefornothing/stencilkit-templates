@@ -171,6 +171,11 @@ describe("compile()", () => {
     expect(shout({ x: "<hi>" })).toBe("<HI>");
   });
 
+  it("accepts initial delimiters", () => {
+    const erb = compile("{{literal}} <%= name %>", { delimiters: ["<%=", "%>"] });
+    expect(erb({ name: "n" })).toBe("{{literal}} n");
+  });
+
   it("rejects non-string templates", () => {
     expect(() => compile(42 as unknown as string)).toThrow(TypeError);
   });

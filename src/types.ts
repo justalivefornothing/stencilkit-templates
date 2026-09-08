@@ -116,6 +116,8 @@ export type Partials =
 export interface CompileOptions {
   /** Replace the default HTML escaper used for `{{var}}` tags. */
   readonly escape?: (value: string) => string;
+  /** Delimiters in effect at the start of the template (default `{{` `}}`). */
+  readonly delimiters?: readonly [open: string, close: string];
 }
 
 /** Thrown for malformed templates; always carries the offending line. */
