@@ -1,0 +1,42 @@
+{
+  "name": "stencilkit-templates",
+  "version": "0.1.0",
+  "description": "A logic-less mustache-style template engine compiled to a token tree once and rendered many times, with sections, inverted sections, partials, dotted lookups, and HTML escaping.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "bench": "npm run build && node bench/render.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "template-engine",
+    "mustache",
+    "parser",
+    "typescript",
+    "node",
+    "logic-less"
+  ],
+  "author": "Jafn",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  }
+}
